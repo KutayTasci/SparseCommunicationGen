@@ -38,7 +38,7 @@ pip install networkit numpy
 
 ```
 .
-├── main.py                Entry point for CLI graph generation
+├── spcommGen.py                Entry point for CLI graph generation
 ├── graphGenerators.py     Graph generator implementations (R-MAT, GNP, etc.)
 ├── metrics.py             Functions for computing graph statistics
 ├── in_out.py              Utility functions for file writing and output handling
@@ -51,7 +51,7 @@ pip install networkit numpy
 To view the usage guide, run:
 
 ```
-python main.py
+python spcommGen.py
 ```
 
 ## Generation Modes
@@ -59,20 +59,20 @@ python main.py
 ### 1. R-MAT (Skew Mode)
 
 ```
-python main.py --mode rmat_skew --vertices 10000 --avg_degree 16 --skew 0.4
+python spcommGen.py --mode rmat_skew --vertices 10000 --avg_degree 16 --skew 0.4
 ```
 
 ### 2. R-MAT (Custom Parameters)
 
 ```
-python main.py --mode rmat_custom --vertices 8192 --avg_degree 12 \
+python spcommGen.py --mode rmat_custom --vertices 8192 --avg_degree 12 \
     --a 0.57 --b 0.19 --c 0.19 --d 0.05
 ```
 
 ### 3. GNP (Erdős–Rényi G(n, p))
 
 ```
-python main.py --mode gnp --vertices 10000 --p 0.0005
+python spcommGen.py --mode gnp --vertices 10000 --p 0.0005
 ```
 
 ## Output
@@ -95,7 +95,7 @@ After generation, the script prints:
 
 To add a new graph generation mode:
 
-1. Write a new handler function in `main.py`.
+1. Write a new handler function in `spcommGen.py`.
 2. Implement the generator in `graphGenerators.py`.
 3. Register it inside `MODE_HANDLERS`.
 
