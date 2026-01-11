@@ -6,6 +6,7 @@ import networkit as nk
 from in_out import *
 from metrics import *
 from graphGenerators import *
+from commGenerator import generate_communication
 global output_path
 
 
@@ -31,11 +32,13 @@ def print_usage_message():
 
 Supported modes:
 
-    • rmat_skew     : R-MAT with skew parameter in [0,1]
-    • rmat_custom   : R-MAT with manually defined a,b,c,d
-    • gnp           : Erdős–Rényi G(n,p) random graph
+    • rmat_skew      : R-MAT with skew parameter in [0,1]
+    • rmat_custom    : R-MAT with manually defined a,b,c,d
+    • gnp            : Erdős–Rényi G(n,p) random graph
+    • communication  : Synthetic communication graph (JSON-driven)
 
-More modes can be added easily due to the modular design.
+The tool is modular: new graph generators can be added easily
+by registering a new mode handler.
 
 ---------------------------------------------------------------
  BASIC EXAMPLES
@@ -43,17 +46,42 @@ More modes can be added easily due to the modular design.
 
   python main.py --mode rmat_skew --vertices 10000 --avg_degree 16 --skew 0.4
 
-  python main.py --mode rmat_custom --vertices 8192 --avg_degree 12 \
+  python main.py --mode rmat_custom --vertices 8192 --avg_degree 12 \\
          --a 0.57 --b 0.19 --c 0.19 --d 0.05
 
   python main.py --mode gnp --vertices 10000 --p 0.0005
 
 ---------------------------------------------------------------
+ COMMUNICATION GRAPH EXAMPLE
+---------------------------------------------------------------
+
+  python main.py --mode communication \\
+         --comm_config configs/comm_example.json \\
+         --out_name comm_graph.mtx
+
+The communication mode reads all parameters from a JSON file,
+including:
+  • number of processes
+  • communication degree and skew
+  • message volume distributions
+  • partition initialization
+  • edge generation probabilities
+
+---------------------------------------------------------------
  OPTIONAL PARAMETERS
 ---------------------------------------------------------------
 
-  --out_dir OUT/    Output directory   (default: output/)
-  --out_name FILE   Output file name   (default: auto-generated)
+  --out_dir OUT/         Output directory        (default: output/)
+  --out_name FILE        Output file name        (default: auto-generated)
+  --comm_config FILE     JSON config file        (required for communication)
+
+---------------------------------------------------------------
+ NOTES
+---------------------------------------------------------------
+
+• For R-MAT modes, --vertices is rounded up to the nearest power of 2.
+• For communication mode, --vertices is ignored and may be set to any value.
+• Output graphs are written in MatrixMarket (.mtx) format.
 
 ===============================================================
 """)
@@ -138,6 +166,25 @@ def handle_gnp(args):
     G = generate_gnp_graph(n=n, p=p)
     return G
 
+def handle_communication(args):
+    """Generate a synthetic communication graph using JSON config."""
+    if args.comm_config is None:
+        raise ValueError("Mode 'communication' requires --comm_config <path_to_json>")
+
+    # Optionally auto-name if user didn't provide one
+    if args.out_name is None:
+        base = os.path.splitext(os.path.basename(args.comm_config))[0]
+        args.out_name = f"comm_{base}.mtx"
+
+    print("\n=== COMMUNICATION GRAPH MODE ===")
+    print(f"Config: {args.comm_config}")
+
+    G_final, part_array = generate_communication(args)  # returns (Graph, part_array)
+
+    # If you want, you can write part_array too (optional)
+    # write_partitions(part_array, args.out_name.replace(".mtx", ".parts"))
+
+    return G_final, part_array
 
 # ============================================================
 # REGISTER MODES HERE
@@ -147,6 +194,7 @@ MODE_HANDLERS = {
     "rmat_skew": handle_rmat_skew,
     "rmat_custom": handle_rmat_custom,
     "gnp": handle_gnp,
+    "communication": handle_communication,
 }
 
 def set_output_path(path):
@@ -174,3 +222,9 @@ def write_mtx(G, filename):
         # Networkit edge iterator gives each edge once
         for (u, v) in G.iterEdges():
             f.write(f"{u+1} {v+1}\n")   # MTX format is 1-based indexing
+
+def write_partitions(part_array, filename):
+    filename = output_path + filename
+    with open(filename, "w") as f:
+        for part in part_array:
+            f.write(f"{part}\n")

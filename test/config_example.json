@@ -1,0 +1,25 @@
+{
+  "number_of_processes": 64,
+  "average_communication_degree": 8,
+  "communication_skew": 0.5,
+
+  "message_volumes": {
+    "max_volume": 1024,
+    "mode": "power",
+    "skew": 0.0,
+    "target_mean": 256,
+    "heavy_tail": false,
+    "seed": null
+  },
+
+  "initialize_graph": {
+    "mean_position": 0.0,
+    "skew": 0.0,
+    "seed": 42
+  },
+
+  "generate_edges": {
+    "edge_connection_prob": 0.1,
+    "seed": 42
+  }
+}

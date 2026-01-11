@@ -20,8 +20,10 @@ def main():
 
     parser.add_argument("--mode", type=str, required=True,
                         help=f"Graph generation mode. Available: {list(MODE_HANDLERS.keys())}")
+    
+    parser.add_argument("--comm_config", type=str, default=None, help="Path to communication generator JSON config (required for mode=communication)")
 
-    parser.add_argument("--vertices", type=int, required=True,
+    parser.add_argument("--vertices", type=int,
                         help="Number of vertices (R-MAT will round to power of 2)")
 
     parser.add_argument("--avg_degree", type=float,
@@ -48,17 +50,25 @@ def main():
 
     mkdir_if_not_exists(args.out_dir)
     set_output_path(args.out_dir)
-
-    G = MODE_HANDLERS[args.mode](args)
+    if args.mode != "communication":
+        G = MODE_HANDLERS[args.mode](args)
+    else:
+        G, part_array = MODE_HANDLERS[args.mode](args)
+        
 
     out_path = os.path.join(args.out_dir, args.out_name)
     print(f"\nWriting graph to: {out_path}")
     write_mtx(G, args.out_name)
 
-    print("\n=== Graph Metrics ===")
-    print_graph_report(G)
-    print("=====================\n")
-
+    if args.mode != "communication":
+        print("\n=== Graph Metrics ===")
+        print_graph_report(G)
+        print("=====================\n")
+    else: 
+        # Write partition array if needed
+        part_out_path = os.path.join(args.out_dir, args.out_name.replace(".mtx", ".parts"))
+        print(f"\nWriting partition array to: {part_out_path}")
+        write_partitions(part_array, args.out_name.replace(".mtx", ".parts"))
 
 if __name__ == "__main__":
     main()

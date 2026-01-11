@@ -112,3 +112,4 @@ def print_graph_report(G):
     print("")
     print(f"Diameter (estimate):   {diameter_estimate(G)}")
     print("===================================")
+
